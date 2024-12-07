@@ -8,7 +8,6 @@ export default function Forecast() {
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState([]);
 
-  console.log(apiKey);
   const fetchWeather = async () => {
 
     // Check if the input is valid
