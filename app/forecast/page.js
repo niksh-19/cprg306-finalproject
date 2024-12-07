@@ -86,7 +86,7 @@ export default function Forecast() {
         )}
         {forecast.length > 0 && (
           <div className="mt-8">
-            <h4 className="text-lg font-bold mb-4 text-white text-center">Todays Forecast</h4>
+            <h4 className="text-lg font-bold mb-4 text-white text-center">Hourly Forecast</h4>
             <div className="grid grid-cols-3 gap-4">
               {forecast.slice(0, 6).map((hour, index) => (
                 <div key={index} className="p-4 bg-gray-700 rounded-lg text-center shadow-md">
