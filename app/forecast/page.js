@@ -19,7 +19,7 @@ export default function Forecast() {
     try {
       const geocodeResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${apiKey}`);
       if (!geocodeResponse.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
       const [geocodeData] = await geocodeResponse.json();
 
@@ -34,14 +34,14 @@ export default function Forecast() {
 
       const weatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}`);
       if (!weatherResponse.ok) {
-        throw new Error('Weather data fetch failed.');
+        throw new Error("Weather data fetch failed.");
       }
       const weatherData = await weatherResponse.json();
       setWeather(weatherData);
 
       const forecastResponse = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`);
       if (!forecastResponse.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
       const forecastData = await forecastResponse.json();
       setForecast(forecastData.list);
@@ -57,8 +57,8 @@ export default function Forecast() {
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? "PM" : "AM"; 
     hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    const strTime = `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+    hours = hours ? hours : 12; // the hour 0 should be 12
+    const strTime = `${hours}:${minutes < 10 ? "0" + minutes : minutes} ${ampm}`;
     return strTime;
   }
 
@@ -86,7 +86,7 @@ export default function Forecast() {
         )}
         {forecast.length > 0 && (
           <div className="mt-8">
-            <h4 className="text-lg font-bold mb-4 text-white text-center">Today's Forecast</h4>
+            <h4 className="text-lg font-bold mb-4 text-white text-center">Todays Forecast</h4>
             <div className="grid grid-cols-3 gap-4">
               {forecast.slice(0, 6).map((hour, index) => (
                 <div key={index} className="p-4 bg-gray-700 rounded-lg text-center shadow-md">
