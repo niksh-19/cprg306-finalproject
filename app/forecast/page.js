@@ -1,14 +1,27 @@
 "use client";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useUserAuth } from "../_utils/auth-context";
+import { useRouter } from "next/navigation";
+import ForecastInput from "./forecastInput";
+import ForecastWeather from "./forecastWeather";
+import ForecastHourly from "./forecastHourly";
 
 const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
 
 export default function Forecast() {
+  const { user, firebaseSignOut } = useUserAuth();
   const [location, setLocation] = useState('');
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState([]);
   const [error, setError] = useState(''); // State for error messages
   const [loading, setLoading] = useState(false); // State for loading
+  const router = useRouter(); // Initialize useRouter
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/"); // Redirect to home if not logged in
+    }
+  }, [user, router]);
 
   const fetchWeather = async () => {
     if (location.trim() === "") {
@@ -16,13 +29,13 @@ export default function Forecast() {
       return;
     }
 
+    // Clear previous data
     setWeather(null);
     setForecast([]);
+    setError('');
     setLoading(true); // Set loading to true
 
     try {
-      setError(""); // Reset error message on each fetch
-
       // Fetch geocode data
       const geocodeResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${apiKey}`);
       if (!geocodeResponse.ok) {
@@ -31,7 +44,7 @@ export default function Forecast() {
       const [geocodeData] = await geocodeResponse.json();
 
       // Validate geocodeData
-      if (!geocodeData || Object.keys(geocodeData).length === 0) {
+      if (!geocodeData || geocodeData.length === 0) {
         setError("We couldn't find your location. Please refine your search (e.g., add state or country).");
         setLoading(false); // Set loading to false
         return;
@@ -59,7 +72,7 @@ export default function Forecast() {
       console.error("Error fetching weather data:", error);
       setError("Something went wrong. Please try again later.");
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
@@ -67,36 +80,39 @@ export default function Forecast() {
     const date = new Date(timestamp * 1000);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM"; 
+    const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour 0 should be 12
     const strTime = `${hours}:${minutes < 10 ? "0" + minutes : minutes} ${ampm}`;
     return strTime;
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-2xl">
-        <h2 className="text-3xl font-bold mb-6 text-center text-white">
-          Weather Forecast
-        </h2>
+      <div className="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-3xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-white">Weather Forecast</h2>
+          <button
+            onClick={firebaseSignOut}
+            className="bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-red-600"
+          >
+            Logout
+          </button>
+        </div>
 
-        {/* Input field for the location */}
-        <input
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="Search for cities"
-          className="w-full px-4 py-2 mb-4 border-none rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring focus:ring-blue-500"
+        {/* Display user information */}
+        {user && (
+          <div className="mb-6">
+            <p className="text-xl font-semibold text-white">Welcome! {user.displayName}..</p>
+          </div>
+        )}
+
+        {/* Forecast Input Component */}
+        <ForecastInput
+          location={location}
+          setLocation={setLocation}
+          fetchWeather={fetchWeather}
         />
-
-        {/* Button to fetch weather */}
-        <button
-          onClick={fetchWeather}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
-        >
-          Get Weather
-        </button>
 
         {/* Display loading indicator */}
         {loading && (
@@ -107,30 +123,19 @@ export default function Forecast() {
 
         {/* Display error message */}
         {error && (
-          <div className="mt-4 bg-red-500 text-white p-3 text-center rounded-lg">
+          <div className="mt-4 bg-red-600 text-white p-3 text-center rounded-lg">
             {error}
           </div>
         )}
 
+        {/* Forecast Weather Component */}
         {weather && !loading && (
-          <div className="mt-6 text-center">
-            <h3 className="text-2xl font-bold text-white">{weather.name}</h3>
-            <p className="text-lg text-gray-300">Chance of rain: {Math.round(weather.main.humidity)}%</p>
-            <p className="text-5xl font-bold text-yellow-500 mt-2">{Math.round(weather.main.temp - 273.15)}&deg;C</p>
-          </div>
+          <ForecastWeather weather={weather} />
         )}
+
+        {/* Forecast Hourly Component */}
         {forecast.length > 0 && !loading && (
-          <div className="mt-8">
-            <h4 className="text-lg font-bold mb-4 text-white text-center">Hourly Forecast</h4>
-            <div className="grid grid-cols-3 gap-4">
-              {forecast.slice(0, 6).map((hour, index) => (
-                <div key={index} className="p-4 bg-gray-700 rounded-lg text-center shadow-md">
-                  <p className="text-sm font-bold text-gray-200 mb-2">{formatTime(hour.dt)}</p>
-                  <p className="text-3xl font-bold text-yellow-500">{Math.round(hour.main.temp - 273.15)}&deg;C</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ForecastHourly forecast={forecast} formatTime={formatTime} />
         )}
       </div>
     </div>
